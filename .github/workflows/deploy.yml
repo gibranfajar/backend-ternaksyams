@@ -1,0 +1,30 @@
+name: Backend CI/CD (Docker No Registry)
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ternaksyams/backend/src
+
+            git pull origin main
+
+            cd ..
+
+            docker compose down
+            docker compose build
+            docker compose up -d
+
+            docker exec backend php artisan migrate --force
+            docker exec backend php artisan optimize
