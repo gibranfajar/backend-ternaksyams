@@ -12,6 +12,14 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
+
+    protected $baseUrlKomerce;
+
+    public function __construct()
+    {
+        $this->baseUrlKomerce = env('RAJAONGKIR_URL_KOMSHIP');
+    }
+
     public function index()
     {
         $orders = Order::with('voucher')->orderBy('id', 'desc')->get();
@@ -80,7 +88,7 @@ class OrderController extends Controller
             $response = Http::withHeaders([
                 'Accept'    => 'application/json',
                 'x-api-key' => env('RAJAONGKIR_DELIVERY_API_KEY'),
-            ])->post("https://api-sandbox.collaborator.komerce.id/order/api/v1/orders/print-label?$query");
+            ])->post("{$this->baseUrlKomerce}/order/api/v1/orders/print-label?$query");
 
             $data = $response->json();
 
@@ -94,7 +102,7 @@ class OrderController extends Controller
 
             $pdfPath = $data['data']['path'] ?? null;
             if ($pdfPath) {
-                $url = 'https://api-sandbox.collaborator.komerce.id/order' . $pdfPath;
+                $url = "{$this->baseUrlKomerce}/order" . $pdfPath;
                 return response()->json(['success' => true, 'url' => $url]);
             }
 
@@ -132,7 +140,7 @@ class OrderController extends Controller
                     "product_height" => 0,
                     "product_length" => 0,
                     "qty" => $item->qty,
-                    "subtotal" => $item->total,
+                    "subtotal" => $item->total * $item->qty,
                 ];
             })->toArray();
 
@@ -144,12 +152,12 @@ class OrderController extends Controller
             $response = Http::withHeaders([
                 'x-api-key' => env('RAJAONGKIR_DELIVERY_API_KEY'),
                 'Accept' => 'application/json',
-            ])->post('https://api-sandbox.collaborator.komerce.id/order/api/v1/orders/store', [
+            ])->post("{$this->baseUrlKomerce}/order/api/v1/orders/store", [
                 "order_date" => now()->toDateTimeString(),
                 "brand_name" => $shipper->brand_name,
                 "shipper_name" => $shipper->shipper_name,
                 "shipper_phone" => $shipper->shipper_phone,
-                "shipper_destination_id" => intval($shipper->district),
+                "shipper_destination_id" => intval($shipper->subdistrict),
                 "shipper_address" => $shipper->shipper_address,
                 "shipper_email" => $shipper->shipper_email,
                 "receiver_name" => $shippingInfo->name,
@@ -161,10 +169,10 @@ class OrderController extends Controller
                 "shipping_type" => strtoupper($shippingOption->service),
                 "payment_method" => "BANK TRANSFER",
                 "shipping_cost" => intval($shippingOption->cost),
-                "shipping_cashback" => 0,
+                "shipping_cashback" => intval($shippingOption->shipping_cashback),
                 "service_fee" => 0,
                 "additional_cost" => 0,
-                "grand_total" => $order->items->sum('total') + $shippingOption->cost,
+                "grand_total" => intval($shippingOption->grand_total - $shippingOption->shipping_cashback), // $order->grand_total - $shippingOption->shipping_cashback,
                 "cod_value" => 0,
                 "insurance_value" => 0,
                 "order_details" => $itemDetailsKomship,
@@ -227,7 +235,7 @@ class OrderController extends Controller
             'Accept'       => 'application/json',
             'Content-Type' => 'application/json',
             'x-api-key'    => env('RAJAONGKIR_DELIVERY_API_KEY'),
-        ])->post('https://api-sandbox.collaborator.komerce.id/order/api/v1/pickup/request', $payload);
+        ])->post("{$this->baseUrlKomerce}/order/api/v1/pickup/request", $payload);
 
         $data = $response->json();
         $message = $data['meta']['message'] ?? 'Unknown error';

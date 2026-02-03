@@ -93,7 +93,7 @@ Route::get('provinces', [RajaongkirController::class, 'provinces']);
 Route::get('cities/{id}', [RajaongkirController::class, 'cities']);
 Route::get('districts/{id}', [RajaongkirController::class, 'districts']);
 Route::get('subdistricts/{id}', [RajaongkirController::class, 'subdistricts']);
-Route::get('cost/{destination}/{weight}/{courier}', [RajaongkirController::class, 'calculateCost']);
+Route::get('cost', [RajaongkirController::class, 'calculateCost']);
 
 // Faqs
 Route::get('/faqs', [MasterAPIController::class, 'getFaqs']);

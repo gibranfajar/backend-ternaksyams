@@ -128,7 +128,7 @@ class AuthController extends Controller
             $token = $user->createToken('auth_token')->plainTextToken;
 
             // Redirect ke frontend React kamu (ubah URL-nya sesuai environment)
-            $frontendUrl = env('FRONTEND_URL', 'https://frontendkamu.com');
+            $frontendUrl = env('FRONTEND_URL');
 
             return redirect()->away($frontendUrl . '/callback?token=' . $token);
         } catch (\Exception $e) {
@@ -160,7 +160,7 @@ class AuthController extends Controller
         );
 
         // Kirim email dengan link ke frontend
-        $frontendUrl =  env('FRONTEND_URL', 'https://ternaksyams.com') . "/reset-password?token=$token";
+        $frontendUrl =  env('FRONTEND_URL') . "/reset-password?token=$token";
         Mail::to($user->email)->send(new ResetPasswordMail($frontendUrl));
 
         return response()->json(['message' => 'Reset password link sent to your email.'], 200);

@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\Mail;
 
 class PartnerController extends Controller
 {
+    protected $baseUrlRajaongkir;
+
+    public function __construct()
+    {
+        $this->baseUrlRajaongkir = env('RAJAONGKIR_URL');
+    }
 
     public function index()
     {
@@ -34,7 +40,7 @@ class PartnerController extends Controller
                 return Http::withHeaders([
                     'key' => env('RAJAONGKIR_API_KEY')
                 ])->timeout(10)
-                    ->get('https://rajaongkir.komerce.id/api/v1/destination/province')
+                    ->get("{$this->baseUrlRajaongkir}/api/v1/destination/province")
                     ->json('data');
             });
         } catch (\Exception $e) {
@@ -56,7 +62,7 @@ class PartnerController extends Controller
                     return Http::withHeaders([
                         'key' => env('RAJAONGKIR_API_KEY')
                     ])->timeout(10)
-                        ->get("https://rajaongkir.komerce.id/api/v1/destination/city/$provinceId")
+                        ->get("{$this->baseUrlRajaongkir}/api/v1/destination/city/$provinceId")
                         ->json('data');
                 });
 
@@ -80,7 +86,7 @@ class PartnerController extends Controller
                     return Http::withHeaders([
                         'key' => env('RAJAONGKIR_API_KEY')
                     ])->timeout(10)
-                        ->get("https://rajaongkir.komerce.id/api/v1/destination/district/$cityId")
+                        ->get("{$this->baseUrlRajaongkir}/api/v1/destination/district/$cityId")
                         ->json('data');
                 });
 

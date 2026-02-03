@@ -3,13 +3,22 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Shipper;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 
 class RajaongkirController extends Controller
 {
-    private string $baseUrl = 'https://rajaongkir.komerce.id/api/v1';
+    protected string $baseUrl;
+    protected string $baseUrlKonship;
+
+    public function __construct()
+    {
+        $this->baseUrl = env('RAJAONGKIR_URL');
+        $this->baseUrlKonship = env('RAJAONGKIR_URL_KOMSHIP');
+    }
 
     /**
      * List of provinces (CACHE)
@@ -21,7 +30,7 @@ class RajaongkirController extends Controller
                 return Http::withHeaders([
                     'key' => env('RAJAONGKIR_API_KEY')
                 ])->timeout(10)
-                    ->get("{$this->baseUrl}/destination/province")
+                    ->get("{$this->baseUrl}/api/v1/destination/province")
                     ->json('data');
             });
 
@@ -44,7 +53,7 @@ class RajaongkirController extends Controller
                 return Http::withHeaders([
                     'key' => env('RAJAONGKIR_API_KEY')
                 ])->timeout(10)
-                    ->get("{$this->baseUrl}/destination/city/$id")
+                    ->get("{$this->baseUrl}/api/v1/destination/city/$id")
                     ->json('data');
             });
 
@@ -67,7 +76,7 @@ class RajaongkirController extends Controller
                 return Http::withHeaders([
                     'key' => env('RAJAONGKIR_API_KEY')
                 ])->timeout(10)
-                    ->get("{$this->baseUrl}/destination/district/$id")
+                    ->get("{$this->baseUrl}/api/v1/destination/district/$id")
                     ->json('data');
             });
 
@@ -90,7 +99,7 @@ class RajaongkirController extends Controller
                 return Http::withHeaders([
                     'key' => env('RAJAONGKIR_API_KEY')
                 ])->timeout(10)
-                    ->get("{$this->baseUrl}/destination/sub-district/$id")
+                    ->get("{$this->baseUrl}/api/v1/destination/sub-district/$id")
                     ->json('data');
             });
 
@@ -106,28 +115,64 @@ class RajaongkirController extends Controller
     /**
      * Calculate shipping cost
      */
-    public function calculateCost($destination, $weight, $courier)
+    public function calculateCost(Request $request)
     {
+        $request->validate([
+            'destination' => 'required|integer',
+            'weight' => 'required|numeric',       // gram
+            'total_price' => 'required|integer',
+            'courier' => 'nullable|string',
+        ]);
+
+        $shipper = Shipper::first();
+
+        // convert gram → kg
+        $weightKg = round($request->weight / 1000, 2);
+
         try {
-            $response = Http::asForm()
-                ->timeout(15)
-                ->withHeaders([
-                    'accept' => 'application/json',
-                    'key' => env('RAJAONGKIR_API_KEY'),
-                ])->post("{$this->baseUrl}/calculate/district/domestic-cost", [
-                    'origin' => 2163,
-                    'destination' => $destination,
-                    'weight' => $weight,
-                    'courier' => $courier
-                ]);
+            $response = Http::withHeaders([
+                'accept' => 'application/json',
+                'x-api-key' => env('RAJAONGKIR_DELIVERY_API_KEY'),
+            ])->get("{$this->baseUrlKonship}/tariff/api/v1/calculate", [
+                'shipper_destination_id' => (int) $shipper->subdistrict,
+                'receiver_destination_id' => (int) $request->destination,
+                'weight' => $weightKg,
+                'item_value' => (int) $request->total_price,
+                'cod' => 'no',
+            ]);
+
+            if ($response->failed()) {
+                return response()->json([
+                    'message' => 'Gagal menghitung ongkir',
+                    'error' => $response->json(),
+                ], 400);
+            }
+
+            $data = $response->json('data.calculate_reguler') ?? [];
+
+            // 🔥 FILTER COURIER (KUNCI JAWABAN)
+            if ($request->filled('courier')) {
+                $courier = strtoupper($request->courier);
+
+                $data = collect($data)->filter(function ($item) use ($courier) {
+                    return strtoupper($item['shipping_name']) === $courier;
+                })->values();
+            }
 
             return response()->json([
-                'data' => $response->json('data')
+                'meta' => [
+                    'destination' => (int) $request->destination,
+                    'weight_gram' => (int) $request->weight,
+                    'weight_kg' => $weightKg,
+                    'total_price' => (int) $request->total_price,
+                    'courier' => $request->courier,
+                ],
+                'data' => $data,
             ]);
         } catch (\Exception $e) {
-            Log::error("Cost API error: " . $e->getMessage());
             return response()->json([
-                'message' => 'Gagal menghitung ongkir'
+                'message' => 'Gagal menghitung ongkir',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

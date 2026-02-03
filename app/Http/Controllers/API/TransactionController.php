@@ -14,7 +14,6 @@ use App\Models\ShippingOption;
 use App\Models\VariantSize;
 use App\Models\Voucher;
 use App\Models\VoucherUsage;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +25,16 @@ use Midtrans\Notification;
 
 class TransactionController extends Controller
 {
+
+    protected $baseUrlKomship;
+    protected $baseUrlMidtrans;
+
+    public function __construct()
+    {
+        $this->baseUrlKomship = env('RAJAONGKIR_URL_KOMSHIP');
+        $this->baseUrlMidtrans = env('MIDTRANS_URL');
+    }
+
     /**
      * Create transaction.
      */
@@ -52,7 +61,10 @@ class TransactionController extends Controller
                 'expedition' => $request->courier,
                 'service'    => $request->service,
                 'cost'       => $request->cost,
-                'etd'        => $request->etd
+                'etd'        => $request->etd,
+                'weight'     => $request->total_weight,
+                'shipping_cashback' => $request->shipping_cashback,
+                'grand_total' => $request->total
             ]);
 
             // === 4️⃣ Simpan shipping information ===
@@ -264,7 +276,7 @@ class TransactionController extends Controller
             ]);
 
             // Buat link pembayaran Midtrans
-            $paymentUrl = 'https://app.midtrans.com/snap/v2/vtweb/' . $snapToken;
+            $paymentUrl = $this->baseUrlMidtrans . $snapToken;
 
             // Kirim email invoice
             Mail::to($request->email)->queue(new OrderInvoiceMail($order, $paymentUrl));
@@ -416,7 +428,7 @@ class TransactionController extends Controller
         // Request ke Komship API
         $response = Http::withHeaders([
             'x-api-key' => env('RAJAONGKIR_DELIVERY_API_KEY')
-        ])->get('https://api-sandbox.collaborator.komerce.id/order/api/v1/orders/history-airway-bill', [
+        ])->get("{$this->baseUrlKomship}/order/api/v1/orders/history-airway-bill", [
             'shipping' => $courier,
             'airway_bill' => $resi,
         ]);

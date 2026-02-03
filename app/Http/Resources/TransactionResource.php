@@ -28,6 +28,9 @@ class TransactionResource extends JsonResource
             'address'           => $this->shipping->shippingInfo->address,
             'resi'              => $this->shipping->receipt_number,
             'payment_method'    => strtoupper($this->payment->method),
+            'payment_status'    => $this->payment->status,
+            'paid_at'           => $this->payment->paid_at,
+            'payment_token'     => $this->payment->token
         ];
     }
 }

@@ -15,6 +15,13 @@ use Illuminate\Support\Facades\Http;
 class AuthController extends Controller
 {
 
+    protected $baseUrlRajaongkir;
+
+    public function __construct()
+    {
+        $this->baseUrlRajaongkir = env('RAJAONGKIR_URL');
+    }
+
     private function growthPercentage($current, $previous): float
     {
         if ($previous == 0) {
@@ -258,7 +265,7 @@ class AuthController extends Controller
                 return Http::withHeaders([
                     'key' => env('RAJAONGKIR_API_KEY')
                 ])->timeout(10)
-                    ->get('https://rajaongkir.komerce.id/api/v1/destination/province')
+                    ->get("{$this->baseUrlRajaongkir}/api/v1/destination/province")
                     ->json('data');
             });
         } catch (\Exception $e) {
@@ -274,7 +281,7 @@ class AuthController extends Controller
         return Cache::remember("rajaongkir_cities_$provinceId", 86400, function () use ($provinceId) {
             return Http::withHeaders([
                 'key' => env('RAJAONGKIR_API_KEY')
-            ])->get("https://rajaongkir.komerce.id/api/v1/destination/city/$provinceId")
+            ])->get("{$this->baseUrlRajaongkir}/api/v1/destination/city/$provinceId")
                 ->json('data');
         });
     }
@@ -284,7 +291,7 @@ class AuthController extends Controller
         return Cache::remember("rajaongkir_districts_$cityId", 86400, function () use ($cityId) {
             return Http::withHeaders([
                 'key' => env('RAJAONGKIR_API_KEY')
-            ])->get("https://rajaongkir.komerce.id/api/v1/destination/district/$cityId")
+            ])->get("{$this->baseUrlRajaongkir}/api/v1/destination/district/$cityId")
                 ->json('data');
         });
     }
@@ -294,7 +301,7 @@ class AuthController extends Controller
         return Cache::remember("rajaongkir_subdistricts_$districtId", 86400, function () use ($districtId) {
             return Http::withHeaders([
                 'key' => env('RAJAONGKIR_API_KEY')
-            ])->get("https://rajaongkir.komerce.id/api/v1/destination/sub-district/$districtId")
+            ])->get("{$this->baseUrlRajaongkir}/api/v1/destination/sub-district/$districtId")
                 ->json('data');
         });
     }
