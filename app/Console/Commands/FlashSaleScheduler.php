@@ -41,7 +41,7 @@ class FlashSaleScheduler extends Command
                         ->increment('stock', $item->stock);
                 }
 
-                $flashSale->update(['status' => 'finished']);
+                $flashSale->update(['status' => 'done']);
                 $flashSale->delete();
             }
         });
