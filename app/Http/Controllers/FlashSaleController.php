@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FlashSale;
-use App\Models\FlashSaleItem;
+use App\Models\FlashsaleItem;
 use App\Models\Product;
 use App\Models\VariantSize;
 use Illuminate\Http\Request;
@@ -107,7 +107,7 @@ class FlashSaleController extends Controller
                         $price = $variantSize->price;
                         $flashsalePrice = $price - ($price * $discount / 100);
 
-                        FlashSaleItem::create([
+                        FlashsaleItem::create([
                             'flashsale_id'    => $flashSale->id,
                             'variant_id'      => $variantId,
                             'variantsize_id'  => $variantSize->id,
@@ -320,15 +320,6 @@ class FlashSaleController extends Controller
                 ->route('flash-sales.index')
                 ->with('success', 'Flash Sale berhasil dihapus dan stok dikembalikan.');
         } catch (\Throwable $e) {
-
-            Log::error('FAILED DELETE FLASH SALE', [
-                'flashsale_id' => $flashSale->id,
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
             return redirect()
                 ->back()
                 ->with('error', 'Gagal menghapus Flash Sale. Silakan coba lagi.');
