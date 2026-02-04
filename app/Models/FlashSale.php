@@ -15,6 +15,6 @@ class FlashSale extends Model
 
     public function items()
     {
-        return $this->hasMany(FlashSaleItem::class, 'flashsale_id', 'id');
+        return $this->hasMany(FlashsaleItem::class, 'flashsale_id', 'id');
     }
 }
