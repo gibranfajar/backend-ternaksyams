@@ -32,6 +32,7 @@ class FlashSaleDetailResource extends JsonResource
         $variants = Variant::with([
             'sizes.size',
             'flashSaleItems.flashSale',
+            'images',
         ])
             ->where('product_id', $this->product_id)
 
@@ -86,6 +87,7 @@ class FlashSaleDetailResource extends JsonResource
                     'variant_name' => $variant->name,
                     'variant_slug' => $variant->slug,
                     'sizes'        => $sizes,
+                    'images'       => $variant->images,
                 ];
             })
             ->filter(fn($variant) => $variant['sizes']->count() > 0) // ❗ pastikan variant punya size flash sale
