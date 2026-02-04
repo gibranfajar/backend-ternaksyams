@@ -61,7 +61,7 @@ class TransactionController extends Controller
                 'expedition' => $request->courier,
                 'service'    => $request->service,
                 'cost'       => $request->cost,
-                'etd'        => $request->etd,
+                'etd'        => $request->etd ?? '-',
                 'weight'     => $request->total_weight,
                 'shipping_cashback' => $request->shipping_cashback,
                 'grand_total' => $request->total
