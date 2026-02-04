@@ -124,14 +124,18 @@ class OrderController extends Controller
                 return back()->with('error', 'Data pengiriman toko belum lengkap untuk order ini silahkan isi terlebih dahulu di menu pengaturan.');
             }
 
-            // ✅ Pastikan relasi lengkap
+            // Pastikan relasi lengkap
             if (!$order->shipping || !$order->shipping->shippingInfo || !$order->shipping->shippingOption) {
                 return back()->with('error', 'Data pengiriman belum lengkap untuk order ini.');
             }
 
-            // ✅ Bangun item details
+            // Bangun item details + hitung dari sumber yang sama
             $itemDetailsKomship = $order->items->map(function ($item) {
+                // harga setelah diskon
                 $priceAfterDiscount = $item->original_price * (100 - $item->discount) / 100;
+
+                $priceAfterDiscount = intval(round($priceAfterDiscount));
+                $subtotal = intval(round($priceAfterDiscount * $item->qty));
 
                 return [
                     "product_name" => $item->name,
@@ -142,16 +146,26 @@ class OrderController extends Controller
                     "product_height" => 0,
                     "product_length" => 0,
                     "qty" => $item->qty,
-                    "subtotal" => $priceAfterDiscount * $item->qty,
+                    "subtotal" => $subtotal,
                 ];
             })->toArray();
 
+            // Hitung total item dari payload yang sama
+            $totalItems = collect($itemDetailsKomship)->sum('subtotal');
 
-            // ✅ Persiapkan data pengiriman (pakai $order, bukan $orderItem)
+            // Ambil data shipping
             $shippingInfo = $order->shipping->shippingInfo;
             $shippingOption = $order->shipping->shippingOption;
 
-            // ✅ Request ke Komship
+            $shippingCost = intval($shippingOption->cost);
+            $shippingCashback = intval($shippingOption->shipping_cashback);
+            $serviceFee = 0;
+            $additionalCost = 0;
+
+            // Rumus grand total yang konsisten
+            $grandTotal = $totalItems + $shippingCost + $serviceFee + $additionalCost - $shippingCashback;
+
+            // Request ke Komship
             $response = Http::withHeaders([
                 'x-api-key' => env('RAJAONGKIR_DELIVERY_API_KEY'),
                 'Accept' => 'application/json',
@@ -171,17 +185,17 @@ class OrderController extends Controller
                 "shipping" => strtoupper($shippingOption->expedition),
                 "shipping_type" => strtoupper($shippingOption->service),
                 "payment_method" => "BANK TRANSFER",
-                "shipping_cost" => intval($shippingOption->cost),
-                "shipping_cashback" => intval($shippingOption->shipping_cashback),
-                "service_fee" => 0,
-                "additional_cost" => 0,
-                "grand_total" => intval($shippingOption->grand_total - $shippingOption->shipping_cashback), // $order->grand_total - $shippingOption->shipping_cashback,
+                "shipping_cost" => $shippingCost,
+                "shipping_cashback" => $shippingCashback,
+                "service_fee" => $serviceFee,
+                "additional_cost" => $additionalCost,
+                "grand_total" => $grandTotal,
                 "cod_value" => 0,
                 "insurance_value" => 0,
                 "order_details" => $itemDetailsKomship,
             ]);
 
-            // ✅ Cek hasil response
+            // Cek hasil response
             if ($response->failed()) {
                 Log::error('Komship API Error', [
                     'order_id' => $order->id,
@@ -190,13 +204,13 @@ class OrderController extends Controller
                 return back()->with('error', 'Gagal mengirim data ke Komship. Silakan coba lagi.');
             }
 
-            // ✅ Ambil data response
+            // Ambil data response
             $result = data_get($response->json(), 'data');
             if (!$result || !isset($result['order_no'])) {
                 return back()->with('error', 'Response dari Komship tidak valid.');
             }
 
-            // ✅ Update shipping order number
+            // Update shipping order number
             $order->shipping()->update([
                 'order_number' => $result['order_no'],
             ]);
@@ -210,6 +224,7 @@ class OrderController extends Controller
             return back()->with('error', 'Terjadi kesalahan internal: ' . $e->getMessage());
         }
     }
+
 
     /**
      * Store pickup order
