@@ -30,7 +30,8 @@ class TransactionResource extends JsonResource
             'payment_method'    => strtoupper($this->payment->method),
             'payment_status'    => $this->payment->status,
             'paid_at'           => $this->payment->paid_at,
-            'payment_token'     => $this->payment->token
+            'payment_token'     => $this->payment->token,
+            'voucher'           => $this->voucher
         ];
     }
 }

@@ -300,7 +300,7 @@ class TransactionController extends Controller
      */
     public function getTransactionUser()
     {
-        $orders = Order::where('user_id', Auth::user()->id)->get();
+        $orders = Order::where('user_id', Auth::user()->id)->orderBy('created_at', 'desc')->get();
 
         $data = TransactionResource::collection($orders);
 

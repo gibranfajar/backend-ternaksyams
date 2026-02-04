@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\FlashSale;
 use App\Models\VariantSize;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class FlashSaleScheduler extends Command
 {
@@ -14,35 +15,33 @@ class FlashSaleScheduler extends Command
 
     public function handle()
     {
+        Log::info('FlashSaleScheduler jalan', [
+            'now' => now()->toDateTimeString(),
+        ]);
+
         DB::transaction(function () {
 
-            /** =======================
-             *  ACTIVATE FLASH SALE
-             *  ======================= */
-            FlashSale::where('status', 'draft')
+            $activated = FlashSale::where('status', 'draft')
                 ->where('start_date', '<=', now())
                 ->where('end_date', '>', now())
                 ->update(['status' => 'ongoing']);
 
-            /** =======================
-             *  FINISH FLASH SALE
-             *  ======================= */
+            Log::info('Activated flashsale', ['count' => $activated]);
+
             $endedFlashSales = FlashSale::where('status', 'ongoing')
                 ->where('end_date', '<=', now())
                 ->get();
 
+            Log::info('Ended flashsale found', ['count' => $endedFlashSales->count()]);
+
             foreach ($endedFlashSales as $flashSale) {
 
                 foreach ($flashSale->items as $item) {
-                    // restore remaining stock
                     VariantSize::where('id', $item->variantsize_id)
                         ->increment('stock', $item->stock);
                 }
 
-                // mark as finished
                 $flashSale->update(['status' => 'finished']);
-
-                // soft delete
                 $flashSale->delete();
             }
         });
