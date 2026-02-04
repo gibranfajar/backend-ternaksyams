@@ -25,6 +25,7 @@ class VariantSize extends Model
     public function getCartPricing()
     {
         $originalPrice = (int) $this->price;
+        $discountPrice = (int) $this->price_after_discount;
 
         // DEFAULT (NO SALE)
         $isSale = false;
@@ -41,7 +42,7 @@ class VariantSize extends Model
             $discountType = 'percent';
             $discount = $this->discount;
 
-            $price = $originalPrice - ($originalPrice * $discount / 100);
+            $price = $discountPrice;
         }
 
         /**
