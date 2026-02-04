@@ -20,7 +20,7 @@ class TransactionResource extends JsonResource
             'qty_item'          => $this->items->count(),
             'total'             => $this->total,
             'status'            => $this->status,
-            'created_at'        => $this->created_at->format('d F Y'),
+            'created_at'        => $this->created_at->format('d F Y | H:i'),
             'details'           => TransactionDetailResource::collection($this->items),
             'courier'           => strtoupper($this->shipping->shippingOption->expedition),
             'service'           => strtoupper($this->shipping->shippingOption->service),
