@@ -113,10 +113,10 @@ class MasterAPIController extends Controller
         $resellers = Reseller::where('status', 'approved')->get();
 
         /*
-    |--------------------------------------------------------------------------
-    | GET PROVINCES (CACHE 1 DAY)
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | GET PROVINCES (CACHE 1 DAY)
+        |--------------------------------------------------------------------------
+        */
         try {
             $provinces = Cache::remember('rajaongkir_provinces', 86400, function () {
                 return Http::withHeaders([
@@ -133,10 +133,10 @@ class MasterAPIController extends Controller
         $provinceMap = collect($provinces)->pluck('name', 'id');
 
         /*
-    |--------------------------------------------------------------------------
-    | GET CITIES PER PROVINCE (CACHE)
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | GET CITIES PER PROVINCE (CACHE)
+        |--------------------------------------------------------------------------
+        */
         $cityMap = [];
         $groupedByProvince = $resellers->groupBy('province_id');
 
@@ -159,10 +159,10 @@ class MasterAPIController extends Controller
         }
 
         /*
-    |--------------------------------------------------------------------------
-    | GET DISTRICTS PER CITY (CACHE)
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | GET DISTRICTS PER CITY (CACHE)
+        |--------------------------------------------------------------------------
+        */
         $districtMap = [];
         $groupedByCity = $resellers->groupBy('city_id');
 
@@ -185,10 +185,10 @@ class MasterAPIController extends Controller
         }
 
         /*
-    |--------------------------------------------------------------------------
-    | INJECT FINAL RESPONSE
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | INJECT FINAL RESPONSE
+        |--------------------------------------------------------------------------
+        */
         $resellers = $resellers->map(function ($item) use ($provinceMap, $cityMap, $districtMap) {
 
             return [
@@ -449,6 +449,7 @@ class MasterAPIController extends Controller
             'product.brand',
             'product',
             'flashSaleItems.flashSale',
+            'images',
         ])
             ->where('slug', $slug)
             ->get();
