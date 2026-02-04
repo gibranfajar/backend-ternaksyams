@@ -18,7 +18,7 @@ use App\Models\Benefit;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Faq;
-use App\Models\FlashSaleItem;
+use App\Models\FlashsaleItem;
 use App\Models\Footer;
 use App\Models\PricelistReseller;
 use App\Models\Product;
@@ -408,7 +408,7 @@ class MasterAPIController extends Controller
     {
         $now = now();
 
-        $items = FlashSaleItem::with([
+        $items = FlashsaleItem::with([
             'variant.product.brand',
             'variant.category',
             'variant.images',
