@@ -131,18 +131,21 @@ class OrderController extends Controller
 
             // ✅ Bangun item details
             $itemDetailsKomship = $order->items->map(function ($item) {
+                $priceAfterDiscount = $item->original_price * (100 - $item->discount) / 100;
+
                 return [
                     "product_name" => $item->name,
                     "product_variant_name" => ($item->variant ?? '-') . ' - ' . ($item->size ?? '-'),
-                    "product_price" => $item->price,
+                    "product_price" => $priceAfterDiscount, // harga per pcs setelah diskon
                     "product_weight" => intval(optional($item->variantSize->size)->label ?? 0),
                     "product_width" => 0,
                     "product_height" => 0,
                     "product_length" => 0,
                     "qty" => $item->qty,
-                    "subtotal" => $item->total * $item->qty,
+                    "subtotal" => $priceAfterDiscount * $item->qty,
                 ];
             })->toArray();
+
 
             // ✅ Persiapkan data pengiriman (pakai $order, bukan $orderItem)
             $shippingInfo = $order->shipping->shippingInfo;
