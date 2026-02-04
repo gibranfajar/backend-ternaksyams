@@ -15,10 +15,6 @@ class FlashSaleScheduler extends Command
 
     public function handle()
     {
-        Log::info('FlashSaleScheduler jalan', [
-            'now' => now()->toDateTimeString(),
-        ]);
-
         DB::transaction(function () {
 
             $activated = FlashSale::where('status', 'draft')
@@ -31,8 +27,6 @@ class FlashSaleScheduler extends Command
             $endedFlashSales = FlashSale::where('status', 'ongoing')
                 ->where('end_date', '<=', now())
                 ->get();
-
-            Log::info('Ended flashsale found', ['count' => $endedFlashSales->count()]);
 
             foreach ($endedFlashSales as $flashSale) {
 

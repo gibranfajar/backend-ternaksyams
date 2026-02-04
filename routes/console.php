@@ -9,3 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('flashsale:sync')->everyMinute();
+
+Schedule::command('app:promotion-scheduler')->everyMinute();
+
+Schedule::command('app:voucher-scheduler')->everyMinute();
