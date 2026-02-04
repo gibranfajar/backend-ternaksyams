@@ -24,7 +24,7 @@ class TransactionResource extends JsonResource
             'details'           => TransactionDetailResource::collection($this->items),
             'courier'           => strtoupper($this->shipping->shippingOption->expedition),
             'service'           => strtoupper($this->shipping->shippingOption->service),
-            'cost'              => $this->shipping->shippingOption->cost,
+            'cost'              => intval($this->shipping->shippingOption->cost),
             'address'           => $this->shipping->shippingInfo->address,
             'resi'              => $this->shipping->receipt_number,
             'payment_method'    => strtoupper($this->payment->method),
