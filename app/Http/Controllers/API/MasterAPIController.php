@@ -566,7 +566,7 @@ class MasterAPIController extends Controller
         if ($voucher->target !== 'all') {
 
             // voucher users
-            $voucherUsers = $voucher->users()->where('user_id', $request->user_id)->first();
+            $voucherUsers = $voucher->users()->where('user_id', auth()->user()->id)->first();
 
             if (!$voucherUsers) {
                 return response()->json([
@@ -585,14 +585,22 @@ class MasterAPIController extends Controller
         }
 
         // 5. Cek kuota
-        $limit = VoucherUsage::where('voucher_id', $voucher->id)->where('user_id', $request->user_id)->where('session', $request->session)->count();
+        $query = VoucherUsage::where('voucher_id', $voucher->id);
+
+        if ($request->user_id) {
+            $query->where('user_id', $request->user_id);
+        } else {
+            $query->where('session', $request->session);
+        }
+
+        $limit = $query->count();
+
         if ($limit >= $voucher->limit) {
             return response()->json([
                 'success' => false,
                 'message' => 'Voucher usage limit reached',
             ], 400);
         }
-
 
         // 6. Voucher untuk product
         if ($voucher->type === 'product') {

@@ -154,10 +154,46 @@
             <td style="text-align:right;">Rp {{ number_format($order->shipping->shippingOption->cost, 0, ',', '.') }}
             </td>
         </tr>
+        @php
+            $voucher = $order->voucher;
+
+            $shippingCost = (int) optional($order->shipping->shippingOption)->cost ?? 0;
+
+            // Kalau kamu punya field khusus subtotal item, pakai itu:
+            $itemsSubtotal = (int) ($order->items_subtotal ?? max($order->total - $shippingCost, 0));
+
+            // Tentukan target amount sesuai tipe voucher
+            if ($voucher->type === 'shipping') {
+                $targetAmount = $shippingCost;
+            } else {
+                // transaction / product
+                $targetAmount = $itemsSubtotal;
+            }
+
+            // Hitung diskon real (dalam rupiah)
+            if ($voucher->amount_type === 'percent') {
+                $discountAmount = ($voucher->amount / 100) * $targetAmount;
+            } else {
+                $discountAmount = $voucher->amount;
+            }
+
+            // Cap ke max_value kalau ada
+            if (!is_null($voucher->max_value)) {
+                $discountAmount = min($discountAmount, $voucher->max_value);
+            }
+
+            // Cap ke target (biar nggak lebih besar dari ongkir / subtotal)
+            $discountAmount = min($discountAmount, $targetAmount);
+            $discountAmount = max((int) round($discountAmount), 0);
+        @endphp
+
         <tr>
             <td>Discount</td>
-            <td style="text-align:right;">Rp {{ number_format($order->discount, 0, ',', '.') }}</td>
+            <td style="text-align:right; color: green;">
+                - Rp {{ number_format($discountAmount, 0, ',', '.') }}
+            </td>
         </tr>
+
         <tr>
             <td><strong>Total Due</strong></td>
             <td style="text-align:right;"><strong>Rp {{ number_format($order->total, 0, ',', '.') }}</strong>

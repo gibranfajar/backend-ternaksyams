@@ -49,7 +49,7 @@
                                         <td class="text-end">Rp {{ number_format($orderItem->price, 0, ',', '.') }}
                                         </td>
                                         <td class="text-center">
-                                            @if ($orderItem->discount_type === 'percent')
+                                            @if ($orderItem->discout_type === 'percent')
                                                 {{ $orderItem->discount }} %
                                             @else
                                                 Rp {{ number_format($orderItem->discount, 0, ',', '.') }}

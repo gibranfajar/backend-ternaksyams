@@ -160,6 +160,8 @@ class TransactionController extends Controller
                 $targetAmount = 0;
                 switch ($voucher->type) {
                     case 'transaction':
+                        $targetAmount = $order->items->sum('total');
+                        break;
                     case 'product': // bisa dikembangkan lebih spesifik untuk product tertentu
                         $targetAmount = max($order->total - $shippingOption->cost, 0);
                         break;
@@ -180,23 +182,6 @@ class TransactionController extends Controller
                     $discountAmount = min($voucher->amount, $targetAmount);
                 }
 
-                // Terapkan diskon ke order
-                switch ($voucher->type) {
-                    case 'transaction':
-                    case 'product':
-                        $orderSubtotal = max($order->total - $shippingOption->cost, 0);
-                        $orderSubtotal -= $discountAmount;
-                        $order->update([
-                            'total' => max($orderSubtotal + $shippingOption->cost, 0),
-                        ]);
-                        break;
-                    case 'shipping':
-                        $newShippingCost = max($shippingOption->cost - $discountAmount, 0);
-                        $order->update([
-                            'total' => max(($order->total - $shippingOption->cost) + $newShippingCost, 0),
-                        ]);
-                        break;
-                }
 
                 // Tambahkan diskon ke itemDetails untuk Midtrans
                 $itemDetails[] = [

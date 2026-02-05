@@ -131,16 +131,16 @@ class OrderController extends Controller
 
             // Bangun item details + hitung dari sumber yang sama
             $itemDetailsKomship = $order->items->map(function ($item) {
-                // harga setelah diskon
-                $priceAfterDiscount = $item->original_price * (100 - $item->discount) / 100;
+                // harga setelah diskon (JANGAN round dulu)
+                $priceAfterDiscount = ($item->original_price * (100 - $item->discount)) / 100;
 
-                $priceAfterDiscount = intval(round($priceAfterDiscount));
+                // subtotal = harga * qty, baru di-round SEKALI
                 $subtotal = intval(round($priceAfterDiscount * $item->qty));
 
                 return [
                     "product_name" => $item->name,
                     "product_variant_name" => ($item->variant ?? '-') . ' - ' . ($item->size ?? '-'),
-                    "product_price" => $priceAfterDiscount, // harga per pcs setelah diskon
+                    "product_price" => intval(round($priceAfterDiscount)), // untuk tampilan, integer
                     "product_weight" => intval(optional($item->variantSize->size)->label ?? 0),
                     "product_width" => 0,
                     "product_height" => 0,
@@ -150,20 +150,18 @@ class OrderController extends Controller
                 ];
             })->toArray();
 
-            // Hitung total item dari payload yang sama
-            $totalItems = collect($itemDetailsKomship)->sum('subtotal');
-
             // Ambil data shipping
             $shippingInfo = $order->shipping->shippingInfo;
             $shippingOption = $order->shipping->shippingOption;
 
-            $shippingCost = intval($shippingOption->cost);
-            $shippingCashback = intval($shippingOption->shipping_cashback);
-            $serviceFee = 0;
-            $additionalCost = 0;
+            $totalItems = collect($itemDetailsKomship)->sum('subtotal');
 
-            // Rumus grand total yang konsisten
-            $grandTotal = $totalItems + $shippingCost + $serviceFee + $additionalCost - $shippingCashback;
+            $shippingCost     = intval($shippingOption->cost);
+            $shippingCashback = intval($shippingOption->shipping_cashback);
+            $serviceFee       = 0;
+            $additionalCost   = 0;
+
+            $grandTotal = $totalItems + $shippingCost + $serviceFee + $additionalCost;
 
             // Request ke Komship
             $response = Http::withHeaders([
