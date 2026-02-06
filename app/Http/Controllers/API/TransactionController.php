@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TransactionResource;
 use App\Mail\OrderInvoiceMail;
 use App\Models\Cart;
+use App\Models\FlashsaleItem;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Shipping;
@@ -13,6 +14,7 @@ use App\Models\ShippingInformation;
 use App\Models\ShippingOption;
 use App\Models\VariantSize;
 use App\Models\Voucher;
+use App\Models\VoucherProduct;
 use App\Models\VoucherUsage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -156,21 +158,46 @@ class TransactionController extends Controller
                     ], 400);
                 }
 
-                // Tentukan target pengurangan berdasarkan tipe voucher
+                // =========================
+                // Tentukan targetAmount
+                // =========================
                 $targetAmount = 0;
-                switch ($voucher->type) {
-                    case 'transaction':
-                        $targetAmount = $order->items->sum('total');
-                        break;
-                    case 'product': // bisa dikembangkan lebih spesifik untuk product tertentu
-                        $targetAmount = max($order->total - $shippingOption->cost, 0);
-                        break;
-                    case 'shipping':
-                        $targetAmount = max($shippingOption->cost, 0);
-                        break;
+
+                if ($voucher->type === 'transaction') {
+                    // Semua item
+                    $targetAmount = $order->items->sum('total');
+                } elseif ($voucher->type === 'shipping') {
+                    // Ongkir
+                    $targetAmount = max($shippingOption->cost, 0);
+                } elseif ($voucher->type === 'product') {
+                    // Hanya item yang eligible di voucher_products
+
+                    // Ambil semua variantsize_id yang eligible untuk voucher ini
+                    $eligibleVariantIds = VoucherProduct::where('voucher_id', $voucher->id)
+                        ->pluck('variantsize_id')
+                        ->toArray();
+
+                    // Hitung subtotal hanya dari item yang eligible
+                    $targetAmount = 0;
+
+                    foreach ($order->items as $item) {
+                        if (in_array($item->variantsize_id, $eligibleVariantIds)) {
+                            $targetAmount += $item->price * $item->qty;
+                        }
+                    }
+
+                    // Kalau tidak ada satupun yang eligible → tolak voucher
+                    if ($targetAmount <= 0) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No product in this order is eligible for this voucher',
+                        ], 400);
+                    }
                 }
 
+                // =========================
                 // Hitung diskon
+                // =========================
                 if ($voucher->amount_type === 'percent') {
                     $discountAmount = ($voucher->amount / 100) * $targetAmount;
 
@@ -182,16 +209,24 @@ class TransactionController extends Controller
                     $discountAmount = min($voucher->amount, $targetAmount);
                 }
 
+                // Safety: tidak boleh negatif / over
+                $discountAmount = max(0, min($discountAmount, $targetAmount));
 
-                // Tambahkan diskon ke itemDetails untuk Midtrans
-                $itemDetails[] = [
-                    'id'       => 'voucher',
-                    'price'    => -(int) $discountAmount,
-                    'quantity' => 1,
-                    'name'     => 'Voucher Discount (' . $voucher->code . ')',
-                ];
+                // =========================
+                // Masukkan ke itemDetails Midtrans
+                // =========================
+                if ($discountAmount > 0) {
+                    $itemDetails[] = [
+                        'id'       => 'voucher-' . $voucher->code,
+                        'price'    => -(int) round($discountAmount),
+                        'quantity' => 1,
+                        'name'     => 'Voucher Discount (' . $voucher->code . ')',
+                    ];
+                }
 
+                // =========================
                 // Simpan penggunaan voucher
+                // =========================
                 VoucherUsage::create([
                     'order_id'   => $order->id,
                     'voucher_id' => $voucher->id,
@@ -201,8 +236,6 @@ class TransactionController extends Controller
                     'amount'     => $discountAmount,
                 ]);
             }
-
-
 
             // === 🔟 Buat parameter Midtrans ===
             $params = [
@@ -243,13 +276,43 @@ class TransactionController extends Controller
                 'weight'                  => $request->total_weight
             ]);
 
-            // === 14️⃣ Update cart & stok ===
+            // === 4️⃣ Update cart & stok ===
             $cart->update(['status' => 'ordered']);
 
             foreach ($order->items as $orderItem) {
-                VariantSize::where('id', $orderItem->variantsize_id)
-                    ->decrement('stock', $orderItem->qty);
+                if ($orderItem->is_flashsale) {
+                    $flashItem = FlashsaleItem::where('variantsize_id', $orderItem->variantsize_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$flashItem) {
+                        throw new \Exception('Flashsale item not found');
+                    }
+
+                    if ($flashItem->stock < $orderItem->qty) {
+                        throw new \Exception('Flashsale stock not enough');
+                    }
+
+                    $flashItem->decrement('stock', $orderItem->qty);
+                } else {
+                    $variantSize = VariantSize::where('id', $orderItem->variantsize_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$variantSize) {
+                        throw new \Exception('Variant size not found');
+                    }
+
+                    if ($variantSize->stock < $orderItem->qty) {
+                        throw new \Exception('Stock not enough');
+                    }
+
+                    $variantSize->decrement('stock', $orderItem->qty);
+                }
             }
+
+
+
 
             DB::commit();
 

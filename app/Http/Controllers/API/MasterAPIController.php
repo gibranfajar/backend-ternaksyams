@@ -420,6 +420,8 @@ class MasterAPIController extends Controller
                     ->where('start_date', '<=', $now)
                     ->where('end_date', '>=', $now);
             })
+            ->orderBy('discount', 'desc')
+            ->orderBy('flashsale_price', 'asc')
             ->get()
 
             // 🔥 GROUP PER VARIANT
@@ -603,38 +605,45 @@ class MasterAPIController extends Controller
         }
 
         // 6. Voucher untuk product
+        $eligibleVariantIds = [];
+
         if ($voucher->type === 'product') {
-            $found = false;
 
-            foreach ($request->product as $item) {
-                $voucherProduct = VoucherProduct::where('variantsize_id', $item['id'])
-                    ->where('voucher_id', $voucher->id)
-                    ->first();
-                if ($voucherProduct) {
-                    $found = true;
-                    break; // cukup 1 product cocok
-                }
-            }
-
-            if (!$found) {
+            if (!$request->has('product') || !is_array($request->product) || count($request->product) === 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Product not found in voucher',
+                    'message' => 'Product data is required for this voucher',
+                ], 400);
+            }
+
+            // Ambil semua variantsize_id dari cart
+            $variantIds = collect($request->product)->pluck('id')->toArray();
+
+            // Ambil product yang memang terdaftar di voucher
+            $eligibleVariantIds = VoucherProduct::where('voucher_id', $voucher->id)
+                ->whereIn('variantsize_id', $variantIds)
+                ->pluck('variantsize_id')
+                ->toArray();
+
+            if (count($eligibleVariantIds) === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No product in your cart is eligible for this voucher',
                 ], 400);
             }
         }
-
 
         // Jika semua valid
         return response()->json([
             'success' => true,
             'message' => 'Voucher applied successfully',
             'data'    => [
-                'voucher_type'  => $voucher->type,
+                'voucher_type'   => $voucher->type,
                 'discount_type'  => $voucher->amount_type,
                 'discount_value' => $voucher->amount,
                 'max_discount'   => $voucher->max_value,
-                'min_transaction' => $voucher->min_transaction_value
+                'min_transaction' => $voucher->min_transaction_value,
+                'eligible_products' => $eligibleVariantIds,
             ],
         ], 200);
     }
