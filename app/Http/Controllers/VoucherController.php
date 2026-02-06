@@ -118,20 +118,20 @@ class VoucherController extends Controller
      */
     public function edit(Voucher $voucher)
     {
-        // Load relasi untuk voucher
+        // Load relasi yang dibutuhkan
         $voucher->load('variantSizes.variant.product', 'users');
 
-        // Ambil firstProduct dengan aman
-        $firstVariantSize = $voucher->variantSizes->first();
-        $firstProduct = $firstVariantSize?->variant?->product ?? null;
+        // Ambil semua product dari variantSizes (unik, tanpa duplikat)
+        $productVouchers = $voucher->variantSizes
+            ->map(function ($vs) {
+                return $vs->variant?->product;
+            })
+            ->filter()          // buang null
+            ->unique('id')      // hilangkan duplikat product
+            ->values();
 
-        if (!$firstProduct) {
-            // Jika voucher belum punya variant/product, bisa handle default atau beri notifikasi
-            $productVouchers = collect(); // koleksi kosong
-        } else {
-            // Ambil semua product vouchers berdasarkan firstProduct
-            $productVouchers = Product::where('id', $firstProduct->id)->get();
-        }
+        // Ambil first product kalau masih mau dipakai buat logic di view
+        $firstProduct = $productVouchers->first();
 
         // Ambil semua products dan users untuk form edit
         $products = Product::with('variants')->get();
@@ -149,6 +149,7 @@ class VoucherController extends Controller
             'productVouchers'
         ));
     }
+
 
 
     /**
