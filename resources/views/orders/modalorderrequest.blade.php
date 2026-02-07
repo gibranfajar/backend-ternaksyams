@@ -1,6 +1,6 @@
 <div class="modal fade" id="showOrderModal{{ $item->id }}" tabindex="-1"
     aria-labelledby="orderModalLabel{{ $item->id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content shadow-lg">
             <form action="{{ route('orders.request-order', $item->id) }}" method="POST">
                 @csrf

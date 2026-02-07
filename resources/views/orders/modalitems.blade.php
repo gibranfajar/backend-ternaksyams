@@ -1,7 +1,7 @@
 <!-- Modal -->
 <div class="modal fade" id="showItemsModal{{ $item->id }}" tabindex="-1" aria-labelledby="showItemsModalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
 
             <!-- Header -->
