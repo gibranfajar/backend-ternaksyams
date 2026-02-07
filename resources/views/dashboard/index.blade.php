@@ -154,9 +154,16 @@
                                                 <td>
                                                     <span class="d-flex align-items-center gap-2">
                                                         <i
-                                                            class="fas fa-circle {{ $item->status == 'pending' ? 'text-warning' : 'text-success' }} f-10 m-r-5"></i>
-                                                        {{ ucfirst($item->status) }}
+                                                            class="fas fa-circle 
+                                                                @if ($item->status == 'pending') text-warning
+                                                                @elseif($item->status == 'processing') text-success
+                                                                @elseif($item->status == 'expired') text-danger
+                                                                @else text-secondary @endif
+                                                            f-10 m-r-5">
+                                                        </i>
+                                                        {{ ucfirst($item->payment->status) }}
                                                     </span>
+
                                                 </td>
                                                 <td>
                                                     <span

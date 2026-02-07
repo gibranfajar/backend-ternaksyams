@@ -57,7 +57,10 @@
                                                 <td>{{ $item->shipping->shippingInfo->name }}</td>
                                                 <td class="text-center">
                                                     <span
-                                                        class="badge {{ $item->status == 'pending' ? 'bg-warning' : 'bg-success' }}">
+                                                        class="badge @if ($item->status == 'pending') bg-warning 
+                                                            @elseif($item->status == 'processing') bg-success 
+                                                            @elseif($item->status == 'expired') bg-danger 
+                                                            @else bg-secondary @endif">
                                                         {{ ucfirst($item->status) }}
                                                     </span>
                                                 </td>
