@@ -29,7 +29,7 @@ class VoucherController extends Controller
     public function create()
     {
         $products = Product::with('variants')->get();
-        $users = User::all();
+        $users = User::where('role', 'user')->get();
         return view('vouchers.create', compact('products', 'users'));
     }
 
@@ -135,7 +135,7 @@ class VoucherController extends Controller
 
         // Ambil semua products dan users untuk form edit
         $products = Product::with('variants')->get();
-        $users = User::all();
+        $users = User::where('role', 'user')->get();
 
         // Ambil voucherContent untuk user pertama (jika ada)
         $voucherContent = VoucherUser::where('voucher_id', $voucher->id)->first();
@@ -149,8 +149,6 @@ class VoucherController extends Controller
             'productVouchers'
         ));
     }
-
-
 
     /**
      * Update the specified resource in storage.

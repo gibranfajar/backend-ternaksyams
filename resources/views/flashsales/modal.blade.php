@@ -1,5 +1,5 @@
 <div class="modal fade" id="addFlashSaleModal" tabindex="-1" aria-labelledby="addFlashSaleLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Pilih Produk & Variannya untuk Flash Sale</h5>

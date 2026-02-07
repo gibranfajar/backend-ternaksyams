@@ -85,3 +85,37 @@
         </div>
     </div>
 @endsection
+
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#giziInput').on('change', function() {
+                const file = this.files[0];
+                const preview = $('#previewImg');
+
+                if (!file) {
+                    preview.hide();
+                    return;
+                }
+
+                // Validasi: harus gambar
+                if (!file.type.startsWith('image/')) {
+                    alert('File harus berupa gambar!');
+                    $(this).val('');
+                    preview.hide();
+                    return;
+                }
+
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    preview.attr('src', e.target.result);
+                    preview.fadeIn(200);
+                };
+
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+@endpush

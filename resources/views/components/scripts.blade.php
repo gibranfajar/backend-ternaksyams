@@ -22,17 +22,6 @@
             });
         }
 
-        if ($('#usersTable').length) {
-            $('#usersTable').DataTable({
-                paging: false,
-                searching: true,
-                info: false,
-                scrollY: "300px",
-                scrollCollapse: true,
-                dom: 'frtip'
-            });
-        }
-
         /* ============================
          * TEMPLATE CONFIG (SAFE)
          * ============================ */
@@ -43,49 +32,6 @@
             preset_change("preset-1");
             font_change("Public-Sans");
         }
-
-        /* ============================
-         * IMAGE PREVIEW (GIZI)
-         * ============================ */
-        $('#giziInput').on('change', function() {
-            const file = this.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = e => {
-                $('#previewImg').attr('src', e.target.result).show();
-            };
-            reader.readAsDataURL(file);
-        });
-
-        /* ============================
-         * IMAGE PREVIEW (THUMBNAIL - MODAL SAFE)
-         * ============================ */
-        $(document).on('change', '#thumbnail', function() {
-            const modal = $(this).closest('.modal');
-            const preview = modal.length ?
-                modal.find('#thumbnailPreview') :
-                $('#thumbnailPreview');
-
-            preview.empty();
-
-            const file = this.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = e => {
-                preview.append(
-                    $('<img>', {
-                        src: e.target.result,
-                        class: 'img-thumbnail mt-2',
-                        css: {
-                            maxWidth: '200px'
-                        }
-                    })
-                );
-            };
-            reader.readAsDataURL(file);
-        });
     });
 </script>
 <script>

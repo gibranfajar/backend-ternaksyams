@@ -43,3 +43,42 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#thumbnail').on('change', function() {
+                const file = this.files[0];
+                const preview = $('#thumbnailPreview');
+
+                preview.html(''); // kosongkan preview sebelumnya
+
+                if (file) {
+                    // cek apakah file gambar
+                    if (!file.type.startsWith('image/')) {
+                        alert('Yang dipilih harus file gambar ya!');
+                        $(this).val('');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+                        const img = $('<img>', {
+                            src: e.target.result,
+                            class: 'img-fluid rounded',
+                            css: {
+                                maxWidth: '200px',
+                                marginTop: '10px'
+                            }
+                        });
+
+                        preview.append(img);
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    </script>
+@endpush

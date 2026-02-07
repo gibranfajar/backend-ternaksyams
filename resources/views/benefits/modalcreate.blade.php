@@ -40,3 +40,42 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#thumbnail').on('change', function() {
+                const file = this.files[0];
+                const preview = $('#thumbnailPreview');
+
+                preview.html(''); // kosongkan preview lama
+
+                if (!file) return;
+
+                // Validasi: harus gambar
+                if (!file.type.startsWith('image/')) {
+                    alert('File harus berupa gambar!');
+                    $(this).val('');
+                    return;
+                }
+
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const img = $('<img>', {
+                        src: e.target.result,
+                        class: 'img-fluid rounded border shadow-sm',
+                        css: {
+                            maxWidth: '200px',
+                            marginTop: '10px'
+                        }
+                    });
+
+                    preview.append(img);
+                };
+
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+@endpush

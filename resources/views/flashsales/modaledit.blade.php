@@ -1,6 +1,6 @@
 <!-- Add Flash Sale Modal -->
 <div class="modal fade" id="addFlashSaleModal" tabindex="-1" aria-labelledby="addFlashSaleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-centered">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addFlashSaleModalLabel">Select Products for Flash Sale</h5>

@@ -55,7 +55,7 @@
                                         @error('thumbnail')
                                             <div class="text-danger">{{ $message }}</div>
                                         @enderror
-                                        <div id="thumbnailPreview" class="mb-3"></div>
+                                        <div id="thumbnailPreview" class="my-3"></div>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="category_id" class="form-label">Category</label>
@@ -82,3 +82,40 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#thumbnail').on('change', function() {
+                const file = this.files[0];
+                const preview = $('#thumbnailPreview');
+
+                preview.html(''); // bersihin preview lama
+
+                if (!file) return;
+
+                // Validasi harus gambar
+                if (!file.type.startsWith('image/')) {
+                    alert('File harus berupa gambar!');
+                    $(this).val('');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = $('<img>', {
+                        src: e.target.result,
+                        class: 'img-fluid rounded border shadow-sm',
+                        css: {
+                            maxWidth: '200px'
+                        }
+                    });
+
+                    preview.append(img);
+                };
+
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+@endpush

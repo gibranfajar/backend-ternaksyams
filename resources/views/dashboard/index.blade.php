@@ -206,7 +206,7 @@
             function createChart(el, labels, users, orders, sales) {
                 return new ApexCharts(document.querySelector(el), {
                     chart: {
-                        type: 'area',
+                        type: 'bar',
                         height: 320,
                         toolbar: {
                             show: false
@@ -220,18 +220,9 @@
                         enabled: false
                     },
                     series: [{
-                            name: 'Users',
-                            data: users
-                        },
-                        {
-                            name: 'Orders',
-                            data: orders
-                        },
-                        {
-                            name: 'Sales',
-                            data: sales
-                        }
-                    ],
+                        name: 'Sales',
+                        data: sales
+                    }],
                     xaxis: {
                         categories: labels
                     },
@@ -254,8 +245,6 @@
                     type: "GET",
                     success: function(res) {
                         dashboardData = res;
-
-                        // render WEEK (default active)
                         renderWeek();
                     }
                 });

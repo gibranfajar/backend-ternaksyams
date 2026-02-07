@@ -36,7 +36,7 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="myTable" class="table table-bordered table-striped align-middle text-nowrap"
+                                <table id="myTable" class="table table-bordered align-middle text-nowrap"
                                     style="font-size: 14px; width: 100%">
                                     <thead>
                                         <tr>
@@ -66,7 +66,7 @@
                                                         class="badge 
                                                             @if ($item->payment->status == 'pending') bg-warning 
                                                             @elseif($item->payment->status == 'settlement') bg-success 
-                                                            @elseif($item->payment->status == 'failed') bg-danger 
+                                                            @elseif($item->payment->status == 'expire') bg-danger 
                                                             @else bg-secondary @endif">
                                                         {{ ucfirst($item->payment->status) }}
                                                     </span>

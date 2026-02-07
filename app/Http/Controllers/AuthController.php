@@ -53,29 +53,11 @@ class AuthController extends Controller
     {
         /* ================= WEEK (7 DAYS) ================= */
         $weekLabels = [];
-        $weekVisitors = [];
-        $weekUsers = [];
-        $weekOrders = [];
         $weekSales = [];
 
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->toDateString();
             $weekLabels[] = Carbon::parse($date)->format('D');
-
-            // Unique Visitors
-            // $weekVisitors[] = PageView::whereDate('created_at', $date)
-            //     ->distinct('session_id')
-            //     ->count();
-
-            // Users
-            $weekUsers[] = User::where('role', '!=', 'admin')->whereDate('created_at', $date)->count();
-
-            // Orders
-            $weekOrders[] = Order::whereHas(
-                'payment',
-                fn($q) =>
-                $q->where('status', 'settlement')->whereDate('created_at', $date)
-            )->count();
 
             // Sales
             $weekSales[] = Order::whereHas(
@@ -87,32 +69,12 @@ class AuthController extends Controller
 
         /* ================= MONTH (12 MONTHS) ================= */
         $monthLabels = [];
-        $monthVisitors = [];
-        $monthUsers = [];
-        $monthOrders = [];
         $monthSales = [];
 
         for ($i = 11; $i >= 0; $i--) {
             $month = now()->subMonths($i);
 
             $monthLabels[] = $month->format('M');
-
-            // $monthVisitors[] = PageView::whereYear('created_at', $month->year)
-            //     ->whereMonth('created_at', $month->month)
-            //     ->distinct('session_id')
-            //     ->count();
-
-            $monthUsers[] = User::where('role', '!=', 'admin')->whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->count();
-
-            $monthOrders[] = Order::whereHas(
-                'payment',
-                fn($q) =>
-                $q->where('status', 'settlement')
-                    ->whereYear('created_at', $month->year)
-                    ->whereMonth('created_at', $month->month)
-            )->count();
 
             $monthSales[] = Order::whereHas(
                 'payment',
@@ -126,16 +88,10 @@ class AuthController extends Controller
         return response()->json([
             'week' => [
                 'labels' => $weekLabels,
-                // 'visitors' => $weekVisitors,
-                'users' => $weekUsers,
-                'orders' => $weekOrders,
                 'sales' => $weekSales,
             ],
             'month' => [
                 'labels' => $monthLabels,
-                // 'visitors' => $monthVisitors,
-                'users' => $monthUsers,
-                'orders' => $monthOrders,
                 'sales' => $monthSales,
             ],
         ]);
@@ -154,30 +110,11 @@ class AuthController extends Controller
                 ->whereBetween('created_at', [$startWeek, $endWeek])
         )->sum('total');
 
-        // ORDERS
-        $orders = Order::whereHas(
-            'payment',
-            fn($q) =>
-            $q->where('status', 'settlement')
-                ->whereBetween('created_at', [$startWeek, $endWeek])
-        )->count();
-
-        // USERS
-        $users = User::where('role', '!=', 'admin')->whereBetween('created_at', [$startWeek, $endWeek])->count();
-
-        // UNIQUE VISITORS
-        // $visitors = PageView::whereBetween('created_at', [$startWeek, $endWeek])
-        //     ->distinct('session_id')
-        //     ->count();
-
         return response()->json([
             'total' => $sales,
-            'labels' => ['Sales', 'Orders', 'Users'],
+            'labels' => ['Sales'],
             'series' => [
                 (float) $sales,
-                (float) $orders,
-                (float) $users,
-                // (float) $visitors
             ]
         ]);
     }
@@ -186,13 +123,6 @@ class AuthController extends Controller
     {
         $year = now()->year;
         $lastYear = now()->year - 1;
-
-        /* ================= PAGE VIEWS ================= */
-        // $pageViewsNow  = PageView::whereYear('created_at', $year)->count();
-        // $pageViewsLast = PageView::whereYear('created_at', $lastYear)->count();
-
-        // $pageViewsGrowth = $this->growthPercentage($pageViewsNow, $pageViewsLast);
-        // $pageViewsExtra  = $pageViewsNow - $pageViewsLast;
 
         /* ================= USERS ================= */
         $usersNow  = User::where('role', '!=', 'admin')->whereYear('created_at', $year)->count();
@@ -237,8 +167,6 @@ class AuthController extends Controller
         $orders = Order::orderBy('id', 'desc')->limit(10)->get();
 
         return view('dashboard.index', compact(
-            // 'pageViewsNow',
-            // 'pageViewsGrowth',
             'usersNow',
             'usersGrowth',
             'usersExtra',

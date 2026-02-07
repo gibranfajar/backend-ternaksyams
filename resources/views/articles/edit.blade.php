@@ -51,11 +51,19 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <label for="thumbnail" class="form-label">Thumbnail</label>
-                                        <input type="file" class="form-control" id="thumbnail" name="thumbnail">
+                                        <label for="thumbnailEdit" class="form-label">Thumbnail</label>
+                                        <input type="file" class="form-control" id="thumbnailEdit" name="thumbnail">
                                         <small class="form-text fst-italic text-muted">Input jika ingin mengubah
                                             thumbnail</small>
-                                        <div id="thumbnailPreview" class="mb-3"></div>
+
+                                        <div class="mt-2">
+                                            <img id="thumbnailPreviewEdit"
+                                                src="{{ $article->thumbnail ? asset('storage/' . $article->thumbnail) : '' }}"
+                                                class="img-fluid rounded border shadow-sm"
+                                                style="max-width:200px; {{ $article->thumbnail ? '' : 'display:none;' }}"
+                                                alt="Thumbnail Preview">
+                                        </div>
+
                                         @error('thumbnail')
                                             <div class="text-danger">{{ $message }}</div>
                                         @enderror
@@ -87,3 +95,29 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#thumbnailEdit').on('change', function() {
+                const file = this.files[0];
+                const preview = $('#thumbnailPreviewEdit');
+
+                if (!file) return;
+
+                // Validasi harus gambar
+                if (!file.type.startsWith('image/')) {
+                    alert('File harus berupa gambar!');
+                    $(this).val('');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.attr('src', e.target.result).fadeIn(200);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+@endpush
