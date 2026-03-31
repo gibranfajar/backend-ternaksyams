@@ -171,15 +171,15 @@
             }
 
             // Hitung diskon real (dalam rupiah)
-            if ($voucher->amount_type === 'percent') {
-                $discountAmount = ($voucher->amount / 100) * $targetAmount;
+            if (optional($voucher)->amount_type === 'percent') {
+                $discountAmount = (optional($voucher)->amount / 100) * $targetAmount;
             } else {
-                $discountAmount = $voucher->amount;
+                $discountAmount = optional($voucher)->amount;
             }
 
             // Cap ke max_value kalau ada
-            if (!is_null($voucher->max_value)) {
-                $discountAmount = min($discountAmount, $voucher->max_value);
+            if (!is_null(optional($voucher)->max_value)) {
+                $discountAmount = min($discountAmount, optional($voucher)->max_value);
             }
 
             // Cap ke target (biar nggak lebih besar dari ongkir / subtotal)
