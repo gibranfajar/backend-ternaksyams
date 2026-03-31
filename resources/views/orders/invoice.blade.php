@@ -163,7 +163,7 @@
             $itemsSubtotal = (int) ($order->items_subtotal ?? max($order->total - $shippingCost, 0));
 
             // Tentukan target amount sesuai tipe voucher
-            if ($voucher->type === 'shipping') {
+            if (optional($voucher)->type === 'shipping') {
                 $targetAmount = $shippingCost;
             } else {
                 // transaction / product
