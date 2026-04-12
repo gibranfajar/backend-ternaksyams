@@ -104,4 +104,6 @@ Route::get('/transaction', [TransactionController::class, 'getTransactionUser'])
 // Callback Midtrans
 Route::post('/midtrans/callback', [TransactionController::class, 'callback']);
 // Tracking Order
-Route::get('/track-order', [TransactionController::class, 'trackOrder']);
+
+// WEBHOOK RAJAONGKIR KOMERCE
+Route::put('/komerce/webhook', [RajaongkirController::class, 'updateKomerceWebhook']);

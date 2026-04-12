@@ -176,4 +176,22 @@ class RajaongkirController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update Komerce Webhook
+     */
+    public function updateKomerceWebhook(Request $request)
+    {
+        $request->validate([
+            'order_no'  => 'required|string',
+            'cnote'     => 'required|string',
+            'status'    => 'nullable|string',
+        ]);
+
+        Log::info('Komerce Webhook received', $request->all());
+
+        return response()->json([
+            'message' => 'Webhook received'
+        ]);
+    }
 }
