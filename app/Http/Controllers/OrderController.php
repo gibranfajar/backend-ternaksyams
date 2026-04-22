@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CancelOrder;
 use App\Models\Order;
 use App\Models\Shipper;
 use App\Models\Shipping;
@@ -291,5 +292,36 @@ class OrderController extends Controller
 
 
         return back()->with('error', 'Failed to pickup order: ' . ($message ?? $response->body()));
+    }
+
+    /**
+     * CANCEL ORDER REQUEST
+     */
+    public function cancelOrder(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required',
+        ]);
+
+        try {
+            $order = Order::findOrFail($id);
+
+            $order->update([
+                'status' => 'cancelled',
+            ]);
+
+            CancelOrder::updateOrCreate(
+                ['order_id' => $id],
+                [
+                    'reason' => $request->reason,
+                    'status' => 'cancelled',
+                ]
+            );
+
+            return redirect()->route('orders.index')->with('success', 'Order canceled successfully.');
+        } catch (\Exception $e) {
+            dd($e);
+            return redirect()->route('orders.index')->with('error', 'Order not found.');
+        }
     }
 }

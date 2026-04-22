@@ -79,6 +79,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('orders/labelstore', [OrderController::class, 'labelStore'])->name('orders.labelstore');
     Route::post('orders/pickup', [OrderController::class, 'pickupStore'])->name('orders.pickup.store');
     Route::post('orders/request/{order}', [OrderController::class, 'orderRequest'])->name('orders.request-order');
+    Route::post('orders/cancel/{id}', [OrderController::class, 'cancelOrder'])->name('orders.cancel');
 
     Route::resource('vouchers', VoucherController::class);
 

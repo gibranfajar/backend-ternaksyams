@@ -31,7 +31,8 @@ class TransactionResource extends JsonResource
             'payment_status'    => $this->payment->status,
             'paid_at'           => $this->payment->paid_at,
             'payment_token'     => $this->payment->token,
-            'voucher'           => $this->voucher
+            'voucher'           => $this->voucher,
+            'cancel_order'      => $this->cancel
         ];
     }
 }

@@ -57,10 +57,19 @@
                                                 <td>{{ $item->shipping->shippingInfo->name }}</td>
                                                 <td class="text-center">
                                                     <span
-                                                        class="badge @if ($item->status == 'pending') bg-warning 
-                                                            @elseif($item->status == 'processing') bg-success 
-                                                            @elseif($item->status == 'expired') bg-danger 
-                                                            @else bg-secondary @endif">
+                                                        class="badge 
+                                                            @switch($item->status)
+                                                                @case('pending') bg-warning @break
+                                                                @case('paid') bg-primary @break
+                                                                @case('processing') bg-info @break
+                                                                @case('packaging') bg-info @break
+                                                                @case('shipped') bg-primary @break
+                                                                @case('delivered') bg-success @break
+                                                                @case('cancelled') bg-danger @break
+                                                                @case('failed') bg-danger @break
+                                                                @case('expired') bg-secondary @break
+                                                                @default bg-secondary
+                                                            @endswitch">
                                                         {{ ucfirst($item->status) }}
                                                     </span>
                                                 </td>
@@ -79,6 +88,13 @@
                                                     {{ $item->created_at->format('d M Y | H:i') }}
                                                 </td>
                                                 <td class="d-flex gap-2 align-items-center justify-content-center">
+
+                                                    <button type="button" class="btn btn-danger btn-sm me-1"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#showModalCancel{{ $item->id }}">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+
                                                     <button type="button" class="btn btn-info btn-sm me-1"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#showItemsModal{{ $item->id }}">
@@ -103,6 +119,7 @@
                                                     @endif
 
                                                     @include('orders.modalitems')
+                                                    @include('orders.modalCancel')
                                                 </td>
                                             </tr>
                                         @endforeach

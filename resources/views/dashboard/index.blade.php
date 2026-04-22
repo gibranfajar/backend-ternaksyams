@@ -155,13 +155,21 @@
                                                     <span class="d-flex align-items-center gap-2">
                                                         <i
                                                             class="fas fa-circle 
-                                                                @if ($item->status == 'pending') text-warning
-                                                                @elseif($item->status == 'processing') text-success
-                                                                @elseif($item->status == 'expired') text-danger
-                                                                @else text-secondary @endif
-                                                            f-10 m-r-5">
+                                                                @switch($item->status)
+                                                                    @case('pending') text-warning @break
+                                                                    @case('paid') text-primary @break
+                                                                    @case('processing') text-info @break
+                                                                    @case('packaging') text-info @break
+                                                                    @case('shipped') text-primary @break
+                                                                    @case('delivered') text-success @break
+                                                                    @case('cancelled') text-danger @break
+                                                                    @case('failed') text-danger @break
+                                                                    @case('expired') text-secondary @break
+                                                                    @default text-secondary
+                                                                @endswitch
+                                                                f-10 m-r-5">
                                                         </i>
-                                                        {{ ucfirst($item->payment->status) }}
+                                                        {{ ucfirst($item->status) }}
                                                     </span>
 
                                                 </td>
